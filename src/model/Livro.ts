@@ -1,4 +1,10 @@
+import type { LivroDTO } from "../interface/LivroDTO.js"; // Importa a interface do DTO
+import { DatabaseModel } from "./DataBaseModel.js"; // Importa a classe DatabaseModel para realizar a conexão com o banco de dados
+
+const database = new DatabaseModel().pool; //Inicializa o pool de conexões com o banco de dados
+
 class Livro {
+  private idLivro: string;
   private titulo: string;
   private autor: string;
   private editora: string;
@@ -11,6 +17,7 @@ class Livro {
  
 
   constructor(
+    _idLivro: string,
     _titulo: string,
     _autor: string,
     _editora: string,
@@ -22,7 +29,9 @@ class Livro {
     _status_livro_emprestado: string
 
   ){
-     this.titulo = _autor;
+    this.idLivro = _idLivro;
+    this.titulo = _titulo;
+     this.autor = _autor;
      this.editora = _editora;
      this.ano_publicacao = _ano_publicacao;
      this.isbn = _isbn;
@@ -34,7 +43,12 @@ class Livro {
   
 
   
-
+public getIdLivro(): string {
+    return this.idLivro;
+    }
+    public setIdLivro(_idLivro: string): void {
+    this.idLivro = _idLivro;
+    }
 
   public getTitulo(): string {
     return this.titulo;
@@ -54,10 +68,10 @@ class Livro {
     public setEditora(_editora: string): void {
     this.editora = _editora;
     }
-    public getAnoPublicacao(): Date {
+    public getAnoPublicacao(): string {
     return this.ano_publicacao;
     }
-    public setAnoPublicacao(_ano_publicacao: Date): void {
+    public setAnoPublicacao(_ano_publicacao: string): void {
     this.ano_publicacao = _ano_publicacao;
     }
     public getIsbn(): string {
@@ -90,4 +104,56 @@ class Livro {
     public setStatusLivroEmprestado(_status_livro_emprestado: string): void {
     this.status_livro_emprestado = _status_livro_emprestado;
     }
+    /**
+     * Retorna os clientes cadastrados no banco de dados
+     * @returns Lista com clientes cadastrados
+     * @returns valor nulo em caso de erro na consulta
+     */
+    static async listaLivro(): Promise<Array<Livro> | null> {
+        try {
+            // Cria uma lista vazia que irá armazenar os objetos do tipo Cliente
+            let listaLivro: Array<Livro> = [];
+
+            // Define a consulta SQL que irá buscar todos os registros da tabela 'clientes'
+            const querySelectLivro = `SELECT * FROM livro WHERE situacao=TRUE;`;
+
+            // Executa a consulta no banco de dados e aguarda a resposta
+            const respostaBD = await database.query(querySelectLivro);
+
+            // Percorre cada linha retornada pela consulta
+            respostaBD.rows.forEach((livroBD) => {
+                // Cria um novo objeto Cliente usando os dados da linha atual (nome, cpf, telefone)
+                const novoLivro: Livro = new Livro(
+                    livroBD.id_livro,
+                    livroBD.titulo,
+                    livroBD.autor,
+                    livroBD.editora,
+                    livroBD.ano_publicacao,
+                    livroBD.isbn,
+                    livroBD.quant_total,
+                    livroBD.quant_disponivel,
+                    livroBD.valor_aplicacao,
+                    livroBD.status_livro_emprestado
+                );
+
+                // Define o ID do cliente usando o valor retornado do banco
+                novoLivro.setIdLivro(livroBD.id_livro);
+
+                // Adiciona o novo cliente à lista de clientes
+                listaLivro.push(novoLivro);
+            });
+
+            // Retorna a lista completa de clientes
+            return listaLivro;
+        } catch (error) {
+            // Em caso de erro na execução da consulta, exibe uma mensagem no console
+            console.error(`Erro na consulta ao banco de dados. ${error}`);
+
+            // Retorna null para indicar que houve uma falha na operação
+            return null;
+        }
+    }
 }
+
+export default Livro;
+
