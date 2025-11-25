@@ -73,6 +73,9 @@ class AlunoController extends Aluno {
             return res.status(500).json({ mensagem: "Não foi possível inserir o aluno" });
         }
     }
-}
+   
+    }
+    
+
 
 export default AlunoController;

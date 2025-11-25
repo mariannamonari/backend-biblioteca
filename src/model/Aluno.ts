@@ -1,25 +1,25 @@
 import type { AlunoDTO } from "../interface/AlunoDTO.js"; // Importa a interface do DTO
-import { DatabaseModel } from "./DataBaseModel.js"; // Importa a classe DatabaseModel para realizar a conexão com o banco de dados
+import { DataBaseModel } from "./DataBaseModel.js"; // Importa a classe DatabaseModel para realizar a conexão com o banco de dados
 
 const database = new DataBaseModel().pool;
 
 class Aluno {
-  private idAluno?: number;
+  private idAluno?: number= 0;
   private ra: string;
   private nome: string;
   private sobrenome: string;
-  private data_nascimento: Date;
+  private dataNascimento: Date;
   private endereco: string;
   private email: string;
   private celular: string;
 
 
   constructor(
-    _idAluno: number,
+    
     _ra: string,
     _nome: string,
     _sobrenome: string,
-    _data_nascimento: Date,
+    _dataNascimento: Date,
     _endereco: string,
     _email: string,
     _celular: string
@@ -29,7 +29,7 @@ class Aluno {
      this.ra = _ra;
      this.nome = _nome;
      this.sobrenome = _sobrenome;
-     this.data_nascimento = _data_nascimento;
+     this.dataNascimento = _dataNascimento;
      this.endereco = _endereco;
      this.email = _email;
      this.celular = _celular;
@@ -37,12 +37,12 @@ class Aluno {
   
 
   
-  public getIdAluno(): number | undefined {
-    return this.idAluno;
-  }
-  public setIdAluno(_idAluno: number): void {
+public SetidAluno(_idAluno: number): void {
     this.idAluno = _idAluno;
   }
+    public getIdAluno(): number | undefined {
+    return this.idAluno;
+    }
 
   public getRa(): string {
     return this.ra;
@@ -64,10 +64,10 @@ class Aluno {
     this.sobrenome = _sobrenome;
   }
     public getDataNascimento(): Date {
-    return this.data_nascimento;
+    return this.dataNascimento;
   }
-    public setDataNascimento(_data_nascimento: Date): void {
-    this.data_nascimento = _data_nascimento;
+    public setDataNascimento(_dataNascimento: Date): void {
+    this.dataNascimento = _dataNascimento;
   }
     public getEndereco(): string {
     return this.endereco;
@@ -107,18 +107,18 @@ class Aluno {
             respostaBD.rows.forEach((alunoBD) => {
                 // Cria um novo objeto Cliente usando os dados da linha atual (nome, cpf, telefone)
                 const novoAluno: Aluno = new Aluno(
-                    alunoBD.id_aluno,
+                    
                     alunoBD.ra,
                     alunoBD.nome,
                     alunoBD.sobrenome,
-                    alunoBD.data_nascimento,
+                    alunoBD.dataNascimento,
                     alunoBD.endereco,
                     alunoBD.email,
                     alunoBD.celular
                 );
 
                 // Define o ID do cliente usando o valor retornado do banco
-                novoAluno.setIdAluno(alunoBD.id_aluno);
+                novoAluno.SetidAluno(alunoBD.id_aluno);
 
                 // Adiciona o novo cliente à lista de clientes
                 listaAluno.push(novoAluno);
@@ -133,7 +133,34 @@ class Aluno {
             // Retorna null para indicar que houve uma falha na operação
             return null;
         }
+      
     }
+    static async cadastrarAluno(novoAluno: AlunoDTO): Promise<boolean> {
+        try {
+            // Define a consulta SQL que irá inserir um novo registro na tabela 'clientes'
+            const queryInsertAluno = `
+        INSERT INTO aluno (ra, nome, sobrenome, dataNascimento, endereco, email, celular, situacao)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, TRUE);
+      `;
+            // Executa a consulta no banco de dados, passando os valores do novo cliente
+            await database.query(queryInsertAluno, [    
+                novoAluno.ra,
+                novoAluno.nome,
+                novoAluno.sobrenome,              
+                novoAluno.dataNascimento,
+                novoAluno.endereco,
+                novoAluno.email,
+                novoAluno.celular
+            ]);   
+            // Retorna true para indicar que o cadastro foi bem-sucedido
+            return true;
+        } catch (error) {
+            // Em caso de erro na execução da consulta, exibe uma mensagem no console
+            console.error(`Erro na inserção ao banco de dados. ${error}`);  
+            // Retorna false para indicar que houve uma falha na operação
+            return false;
+        }
+      }
 }
 
 export default Aluno;
